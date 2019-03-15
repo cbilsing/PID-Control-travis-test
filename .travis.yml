@@ -1,7 +1,4 @@
 language: c
 compiler: gcc
-before_script: 
-- "mkdir build"
-- "mkdir build/debug"
-- "mkdir build/debug/temp"
+before_script: "mkdir build/debug/temp"
 script: "make -f Makefile.linux"
