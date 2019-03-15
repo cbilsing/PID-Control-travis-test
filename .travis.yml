@@ -3,4 +3,5 @@ compiler: gcc
 before_script: 
 - "mkdir build"
 - "mkdir build/debug"
+- "mkdir build/debug/temp"
 script: "make -f Makefile.linux"
