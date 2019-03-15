@@ -1,0 +1,14 @@
+BUILDDIR=build/debug
+TEMPDIR=${BUILDDIR}/temp
+SRCDIR=src
+
+#CCFLAGS=-Isrc -O0 -ffunction-sections -fdata-sections -Wall -pedantic 
+CCFLAGS=-Isrc -O0 -Wall -pedantic -g
+
+all:
+	gcc ${CCFLAGS} -c ${SRCDIR}/pidcontrol.c -o ${TEMPDIR}/pidcontrol.o
+	gcc ${CCFLAGS} -c ${SRCDIR}/pidverify.c -o ${TEMPDIR}/pidverify.o
+#	gcc ${CCFLAGS} -Wl,--gc-sections ${TEMPDIR}/pidverify.o ${TEMPDIR}/pidcontrol.o -o${BUILDDIR}/pidverify.exe
+	gcc ${CCFLAGS} ${TEMPDIR}/pidverify.o ${TEMPDIR}/pidcontrol.o -o${BUILDDIR}/pidverify.exe
+
+

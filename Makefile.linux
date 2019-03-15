@@ -1,0 +1,12 @@
+BUILDDIR=build/debug
+TEMPDIR=${BUILDDIR}/temp
+SRCDIR=src
+
+CCFLAGS=-Isrc -O2 -Wall -g 
+
+all:
+	gcc ${CCFLAGS} -c ${SRCDIR}/pidcontrol.c -o ${TEMPDIR}/pidcontrol.o
+	gcc ${CCFLAGS} -c ${SRCDIR}/pidverify.c -o ${TEMPDIR}/pidverify.o
+	gcc ${CCFLAGS} ${TEMPDIR}/pidverify.o ${TEMPDIR}/pidcontrol.o -o${BUILDDIR}/pidverify
+
+
