@@ -1,3 +1,4 @@
 language: c
 compiler: gcc
+install: "mkdir build" "mkdir /build/debug" "mkdir /build/debug/temp"
 script: "make -f Makefile.linux"
