@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <malloc.h>
-// do not include string.h because the strtod-function
-// of string.h does not work!
+// strtod() needs the stdlib.h, but apparently the prototype
+// of it is wrongly defined in string.h
 // https://cboard.cprogramming.com/c-programming/173070-strtod-standard-library-not-working.html
-//#include <string.h>
+#include <string.h>
 #include <stdlib.h>
 #include "pidcontrol.h"
 
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 	double *err;
 	
 	
-		/* Read parameters from command line 
+	/* Read parameters from command line 
 	 * Which controller should be tested?
 	 * Threshold for sample variance?
 	 * Command Line Options: pidtest [Testmode] [variance_thresh]
@@ -39,14 +39,14 @@ int main(int argc, char* argv[])
 	 "3 ==> Test PID-Controller \n"
 	 "variance_thresh e.g. \"1.423095e-13\". If not provided then it will be 2e-13\n\n";
 	 
-	 if (argc < 2 || argc > 3) {
-		 printf(usage_string);
+	if (argc < 2 || argc > 3) {
+		 puts(usage_string);
 		 return 1;
 	}
 	//read test mode
 	int test_mode = strtol(argv[1], NULL, 10);
 	if (test_mode < 1 || test_mode > 3) {
-		printf(usage_string);
+		puts(usage_string);
 		return 1;
 	}
 	else
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		sample_var_thresh = strtod(argv[2], NULL);
 		if (sample_var_thresh == 0.0) {
 			printf("%f\n", sample_var_thresh);
-			printf(usage_string);
+			puts(usage_string);
 			return 1;
 		}
 	}
@@ -98,7 +98,6 @@ int main(int argc, char* argv[])
 	char	line[256];
 
 	FILE*			datafile;
-	int				cnt;
 
 	int	choice = 0;
 
@@ -151,16 +150,16 @@ int main(int argc, char* argv[])
 		pid_Step(2, eLib, &yPIDLib[i]);
 	}
 
-	printf("Size of int8_t: %d Byte\n", sizeof(int8_t));
-	printf("Size of uint8_t: %d Byte\n", sizeof(uint8_t));
-	printf("Size of int16_t: %d Byte\n", sizeof(int16_t));
-	printf("Size of uint16_t: %d Byte\n", sizeof(uint16_t));
-	printf("Size of int32_t: %d Byte\n", sizeof(int32_t));
-	printf("Size of uint32_t: %d Byte\n", sizeof(uint32_t));
-	printf("Size of int64_t: %d Byte\n", sizeof(int64_t));
-	printf("Size of uint64_t: %d Byte\n", sizeof(uint64_t));
-	printf("Size of float: %d Byte\n", sizeof(float));
-	printf("Size of double: %d Byte\n\n", sizeof(double));
+	printf("Size of int8_t: %lu Byte\n", sizeof(int8_t));
+	printf("Size of uint8_t: %lu Byte\n", sizeof(uint8_t));
+	printf("Size of int16_t: %lu Byte\n", sizeof(int16_t));
+	printf("Size of uint16_t: %lu Byte\n", sizeof(uint16_t));
+	printf("Size of int32_t: %lu Byte\n", sizeof(int32_t));
+	printf("Size of uint32_t: %lu Byte\n", sizeof(uint32_t));
+	printf("Size of int64_t: %lu Byte\n", sizeof(int64_t));
+	printf("Size of uint64_t: %lu Byte\n", sizeof(uint64_t));
+	printf("Size of float: %lu Byte\n", sizeof(float));
+	printf("Size of double: %lu Byte\n\n", sizeof(double));
 
 	/* letse delete this later
 	printf("Which controller would you like to compare?\nEnter one of the following nummbers:\n");
@@ -286,11 +285,11 @@ int main(int argc, char* argv[])
 	printf("sample variance = squared error sum / number of samples = %e\n", sample_variance);
 	printf("threshold = %e", (double)sample_var_thresh);
 	if (sample_variance <= sample_var_thresh) {
-		printf("==> Test successful!\n");
+		puts("==> Test successful!\n");
 		return 0;
 	}
 	else {
-		printf("==> Test failed!\n");
+		puts("==> Test failed!\n");
 		return 1;
 	}
 }
