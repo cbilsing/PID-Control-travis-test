@@ -3,6 +3,7 @@ compiler: gcc
 before_script: "mkdir build/debug/temp"
 script: 
 - "make -f Makefile.linux"
+- "cd build/debug"
 - ./build/debug/pidtest 1
 - ./build/debug/pidtest 2
 - ./build/debug/pidtest 3

@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 	if (datafile == NULL) 
 	{
 		printf("Couldn't open datafile for reading\n");
-		return 0;
+		return 1;
 	}
 
 	/* Determine the number of datasets (=rows) provided by the test-data */
@@ -293,7 +293,5 @@ int main(int argc, char* argv[])
 		printf("==> Test failed!\n");
 		return 1;
 	}
-
-	return 0;
 }
 
