@@ -1,1 +1,4 @@
-/build
+build/debug/*
+!build/debug/PIDControlTestData.txt
+build/*
+
