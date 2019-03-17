@@ -24,9 +24,9 @@ t0 = 0
 tf = 30
 
 # e_mode = "sinus"
-e_mode = "step"
-step_time = 2
-# e_mode = "two_added_sines"
+# e_mode = "step"
+# step_time = 2
+e_mode = "two_added_sines"
 
 
 """Beginning of program execution"""
