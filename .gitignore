@@ -1,4 +1,8 @@
 build/debug/*
 !build/debug/PIDControlTestData.txt
 build/*
+python/.idea/*
+
+src/pidtest_beforefixpoint.c
+src/pidverify_old.c
 

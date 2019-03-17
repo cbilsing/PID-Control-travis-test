@@ -2,9 +2,16 @@ language: c
 compiler: gcc
 before_script: "mkdir build/debug/temp"
 script: 
+# compile and test floating point version
 - "make -f Makefile.linux"
 - "cd build/debug"
 - ./pidtest 1
 - ./pidtest 2
 - ./pidtest 3
-
+# compile and test fixed point version
+- "cd ../.."
+- "make -f Makefile.linux fixedpoint=y"
+- "cd build/debug"
+- ./pidtest 1
+- ./pidtest 2
+- ./pidtest 3

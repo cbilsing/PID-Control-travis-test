@@ -7,7 +7,50 @@
 #include <stdlib.h>
 #include "pidcontrol.h"
 
+#ifdef PID_FIXPOINT
+/* Define sample variance threshold depending on the 
+ * integer precision 
+ * standard deviation should be better than error of sqrt(2) in second last decimal point
+ * ==> var_thresh = sqrt(2)^2 * 10^(-2(IntegerPrecision-1)) */
+	#if PID_INTEGER_PRECISION == 0
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e2
+	#elif PID_INTEGER_PRECISION == 1
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e0
+	#elif PID_INTEGER_PRECISION == 2
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-2
+	#elif PID_INTEGER_PRECISION == 3
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-4
+	#elif PID_INTEGER_PRECISION == 4
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-6
+	#elif PID_INTEGER_PRECISION == 5
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-8
+	#elif PID_INTEGER_PRECISION == 6
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-10
+	#elif PID_INTEGER_PRECISION == 7
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-12
+	#elif PID_INTEGER_PRECISION == 8
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-14
+	#elif PID_INTEGER_PRECISION == 9
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-16
+	#elif PID_INTEGER_PRECISION == 10
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-18
+	#elif PID_INTEGER_PRECISION == 11
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-20
+	#elif PID_INTEGER_PRECISION == 12
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-22
+	#elif PID_INTEGER_PRECISION == 13
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-24
+	#elif PID_INTEGER_PRECISION == 14
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-26
+	#elif PID_INTEGER_PRECISION == 15
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-28
+	#elif PID_INTEGER_PRECISION == 16
+		#define DEFAULT_SAMPLE_VAR_THRESH 2e-30
+	#endif  
+#else
+/* 2e-13 was chosen arbitrarily */
 #define DEFAULT_SAMPLE_VAR_THRESH 2e-13
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -21,9 +64,17 @@ int main(int argc, char* argv[])
 	PIDValue* yPLib;
 	PIDValue* yPILib;
 	PIDValue* yPIDLib;
-	PIDValue  eLib;
+	PIDValue*  eLib;
 	PIDValue Kp_Read, Ki_Read, Kd_Read, Tf_Read, TSample_Read, Kr_Read, Tn_Read, Tv_Read;
-	double *err;
+	PIDValue *err;
+	
+#ifndef PID_FIXPOINT
+	puts("Library got compiled for using FLOATING POINT.");
+#else
+	puts("Library got compiled for using FIXPOINT.");
+	printf("Fixpoint precision = %d, fixpoint factor = %d\n", PID_INTEGER_PRECISION, PID_FIXPOINT_FACTOR);
+	double d; //just a helper variable for fixpoint calculation
+#endif
 	
 	
 	/* Read parameters from command line 
@@ -67,8 +118,6 @@ int main(int argc, char* argv[])
 	printf("Threshold for sample variance is %e\n", sample_var_thresh);
 	i = 0;
 	
-	//double sample_var_thresh = DEFAULT_SAMPLE_VAR_THRESH;
-	//int test_mode = 3;
 
 #ifndef PID_FIXPOINT
 	/* For the floating point test we assume the following parameters:
@@ -96,9 +145,7 @@ int main(int argc, char* argv[])
 #endif
 
 	char	line[256];
-
 	FILE*			datafile;
-
 	int	choice = 0;
 
 	/* Open the file with the reference test-data */
@@ -116,13 +163,14 @@ int main(int argc, char* argv[])
 	/* Allocate corresponding memory for the data to import */
 	tSim    = malloc(DataSets*sizeof(double));
 	eSim    = malloc(DataSets*sizeof(double));
+	eLib    = malloc(DataSets*sizeof(PIDValue));
 	yPSim   = malloc(DataSets*sizeof(double));
 	yPISim  = malloc(DataSets*sizeof(double));
 	yPIDSim = malloc(DataSets*sizeof(double));
-	yPLib   = malloc(DataSets*sizeof(double));
-	yPILib  = malloc(DataSets*sizeof(double));
-	yPIDLib = malloc(DataSets*sizeof(double));
-	err = malloc(DataSets*sizeof(double));
+	yPLib   = malloc(DataSets*sizeof(PIDValue));
+	yPILib  = malloc(DataSets*sizeof(PIDValue));
+	yPIDLib = malloc(DataSets*sizeof(PIDValue));
+	err = malloc(DataSets*sizeof(PIDValue));
 
 	/* Reset the file pointer to the beginning of the file and import the data */
 	fseek(datafile, 0, SEEK_SET);
@@ -141,13 +189,13 @@ int main(int argc, char* argv[])
 	for (i=0; i < DataSets; i++)
 	{
 #ifdef PID_FIXPOINT
-		eLib = (PIDValue)(eSim[i]*PID_FIXPOINT_FACTOR);
+		eLib[i] = (PIDValue)(eSim[i]*PID_FIXPOINT_FACTOR);
 #else
-		eLib = (PIDValue)eSim[i];
+		eLib[i] = (PIDValue)eSim[i];
 #endif
-		pid_Step(0, eLib, &yPLib[i]);
-		pid_Step(1, eLib, &yPILib[i]);
-		pid_Step(2, eLib, &yPIDLib[i]);
+		pid_Step(0, eLib[i], &yPLib[i]);
+		pid_Step(1, eLib[i], &yPILib[i]);
+		pid_Step(2, eLib[i], &yPIDLib[i]);
 	}
 
 	printf("Size of int8_t: %lu Byte\n", sizeof(int8_t));
@@ -161,21 +209,9 @@ int main(int argc, char* argv[])
 	printf("Size of float: %lu Byte\n", sizeof(float));
 	printf("Size of double: %lu Byte\n\n", sizeof(double));
 
-	/* letse delete this later
-	printf("Which controller would you like to compare?\nEnter one of the following nummbers:\n");
-	printf("1 -> P-controller\n");
-	printf("2 -> PI-controller\n");
-	printf("3 -> PID-controller\n");
-	printf("\nYour choice: ");
-	cnt = scanf("%d", &choice);
-
-	if (cnt <= 0)
-	{
-		printf("Nothing read (scanf return-code: %d)", cnt);
-		return -1;
-	}
-	* */
-	choice = test_mode;
+	// use the input from the command line to specify
+	// which controller is supposed to be tested
+	choice = test_mode; 
 	switch (choice) {
 		case 1:
 			printf("Testing P-Controller\n");
@@ -187,27 +223,54 @@ int main(int argc, char* argv[])
 			printf("Testing PID-Controller\n");
 	};
 
-	printf("\n\nt \t\t e \t\t Sim \t\t Lib \t\t Err \n");
+	
 #ifdef PID_FIXPOINT
+	printf("Data in integers\n");
+	printf("\nt \t\t eLib \t\t Sim \t\t Lib \t\t Err \n");
 	switch (choice)
 	{
 	case 1:
 		for (i=0; i < DataSets; i++) {
-			printf("%.8f\t %.8f\t %.8f\t %.8f\t %.8f\n", tSim[i], eSim[i], yPSim[i], ((double)yPLib[i])/PID_FIXPOINT_FACTOR, ((double)yPLib[i])/PID_FIXPOINT_FACTOR - yPSim[i]);
-			err[i] = ((double)yPLib[i])/PID_FIXPOINT_FACTOR - yPSim[i];
+		printf("%.8f\t %d\t\t %d\t\t %d\t\t %d\n", tSim[i], eLib[i], (int)(yPSim[i] * PID_FIXPOINT_FACTOR), yPLib[i], yPLib[i] - (int)(yPSim[i] * PID_FIXPOINT_FACTOR));
+		err[i] = yPLib[i] - (int)(yPSim[i] * PID_FIXPOINT_FACTOR);
 		}
+		pid_ParaGet_T(0, &Kr_Read, NULL, NULL, &Tf_Read, &TSample_Read );
+		pid_ParaGet_K(0, &Kp_Read, NULL, NULL, NULL, NULL );
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("Kp = %d (should be: %d)\n", Kp_Read, Kp);
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("TSample = %d (should be: %d)\n", TSample_Read, TSample);
 		break;
 	case 2:
 		for (i=0; i < DataSets; i++) {
-			printf("%.8f\t %.8f\t %.8f\t %.8f\t %.8f\n", tSim[i], eSim[i], yPISim[i], ((double)yPILib[i])/PID_FIXPOINT_FACTOR, ((double)yPILib[i])/PID_FIXPOINT_FACTOR - yPISim[i]);
-			err[i] = ((double)yPILib[i])/PID_FIXPOINT_FACTOR - yPISim[i];
+			printf("%.8f\t %d\t\t %d\t\t %d\t\t %d\n", tSim[i], eLib[i], (int)(yPISim[i] * PID_FIXPOINT_FACTOR), yPILib[i], yPILib[i] - (int)(yPISim[i] * PID_FIXPOINT_FACTOR));
+			err[i] = yPILib[i] - (int)(yPISim[i] * PID_FIXPOINT_FACTOR);
 		}
+		pid_ParaGet_T(1, &Kr_Read, &Tn_Read, NULL, &Tf_Read, &TSample_Read );
+		pid_ParaGet_K(1, &Kp_Read, &Ki_Read, NULL, NULL, NULL );
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("Kp = %d (should be: %d)\n", Kp_Read, Kp);
+		printf("Ki = %d (should be: %d)\n", Ki_Read, Ki);
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("Tn = %d (should be: %d)\n", Tn_Read, Kp/Ki);
+		printf("TSample = %d (should be: %d)\n", TSample_Read, TSample);
 		break;
 	case 3:
 		for (i=0; i < DataSets; i++) {
-			printf("%.8f\t %.8f\t %.8f\t %.8f\t %.8f\n", tSim[i], eSim[i], yPIDSim[i], ((double)yPIDLib[i])/PID_FIXPOINT_FACTOR, ((double)yPIDLib[i])/PID_FIXPOINT_FACTOR - yPIDSim[i]);
-			err[i] = ((double)yPIDLib[i])/PID_FIXPOINT_FACTOR - yPIDSim[i];
+			printf("%.8f\t %d\t\t %d\t\t %d\t\t %d\n", tSim[i], eLib[i], (int)(yPIDSim[i] * PID_FIXPOINT_FACTOR), yPIDLib[i], yPIDLib[i] - (int)(yPIDSim[i] * PID_FIXPOINT_FACTOR));
+			err[i] = yPIDLib[i] - (int)(yPIDSim[i] * PID_FIXPOINT_FACTOR);
 		}
+		pid_ParaGet_T(2, &Kr_Read, &Tn_Read, &Tv_Read, &Tf_Read, &TSample_Read );
+		pid_ParaGet_K(2, &Kp_Read, &Ki_Read, &Kd_Read, NULL, NULL );
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("Kp = %d (should be: %d)\n", Kp_Read, Kp);
+		printf("Ki = %d (should be: %d)\n", Ki_Read, Ki);
+		printf("Kd = %d (should be: %d)\n", Kd_Read, Kd);
+		printf("Kr = %d (should be: %d)\n", Kr_Read, Kp);
+		printf("Tn = %d (should be: %d)\n", Tn_Read, Kp/Ki);
+		printf("Tv = %d (should be: %d)\n", Tv_Read, Kd/Kp);
+		printf("Tf = %d (should be: %d)\n", Tf_Read, Tf);
+		printf("TSample = %d (should be: %d)\n", TSample_Read, TSample);
 		break;
 	}
 #else
@@ -263,11 +326,16 @@ int main(int argc, char* argv[])
 
 	/* Test if the squared error sum is less than a chosen threshold 
 	 * We can definitely use double/float values because this test is 
-	 * for travis, not for a microcontroller*/
-	double squared_err_sum = 0.0;
+	 * for travis, not for a microcontroller */
+	double squared_err_sum = (PIDValue)0.0;
 	double sample_variance;
 	for (i=0; i < DataSets; i++) {
-		squared_err_sum += err[i] * err[i];
+#ifdef PID_FIXPOINT
+	d = ((double)err[i]) / PID_FIXPOINT_FACTOR;
+	squared_err_sum +=  d * d;
+#else
+	squared_err_sum += err[i] * err[i];
+#endif
 	}
 	sample_variance = squared_err_sum / DataSets;
 	
@@ -280,6 +348,8 @@ int main(int argc, char* argv[])
 	free(yPLib);
 	free(yPILib);
 	free(yPIDLib);
+	free(eLib);
+	free(err);
 	
 	printf("squared error sum = %e\n", squared_err_sum);
 	printf("sample variance = squared error sum / number of samples = %e\n", sample_variance);

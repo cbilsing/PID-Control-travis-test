@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 	PIDValue Kd      = 2;
 	PIDValue Tf      = 2;
 	PIDValue TSample = 0.5;
+	puts("Compiled withOUT PID_FIXPOINT enabled");
 #else
 	/* When using fixpoint arithmetic we have to consider the following 
 	   for the floating point parameters given above:
@@ -37,10 +38,12 @@ int main(int argc, char* argv[])
 	   Tf = 20, Ta = 5
     */
 	PIDValue Kp      = 2*PID_FIXPOINT_FACTOR;
-	PIDValue Ki      = (PIDValue)(0.05*PID_FIXPOINT_FACTOR);
+	PIDValue Ki      = (PIDValue)(0.05*PID_FIXPOINT_FACTOR); //????? diese stelle sieht gefährlich aus
 	PIDValue Kd      = 20*PID_FIXPOINT_FACTOR;
 	PIDValue Tf      = 20;
 	PIDValue TSample = 5;
+	
+	puts("Compiled with PID_FIXPOINT enabled");
 #endif
 
 	char	line[256];
@@ -90,6 +93,7 @@ int main(int argc, char* argv[])
 	{
 #ifdef PID_FIXPOINT
 		eLib = (PIDValue)(eSim[i]*PID_FIXPOINT_FACTOR);
+		printf("%d \t", eLib);
 #else
 		eLib = (PIDValue)eSim[i];
 #endif

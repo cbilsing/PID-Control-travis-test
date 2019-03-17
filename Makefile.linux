@@ -2,15 +2,22 @@ BUILDDIR=build/debug
 TEMPDIR=${BUILDDIR}/temp
 SRCDIR=src
 
-CCFLAGS=-Isrc -O2 -Wall -g 
+ifeq ($(fixedpoint), )
+    CCFLAGS=-Isrc -O2 -Wall -g
+else
+    CCFLAGS=-Isrc -O2 -Wall -g -D PID_FIXPOINT -D PID_VAL_FORMAT_I32
+endif
 
-# pidverify is not built due to warnings which look not nicely
+# pidverify is not built due to warnings which do not look nicely
 # in travis ci
+
 all:
 	gcc ${CCFLAGS} -c ${SRCDIR}/pidcontrol.c -o ${TEMPDIR}/pidcontrol.o
 	# gcc ${CCFLAGS} -c ${SRCDIR}/pidverify.c -o ${TEMPDIR}/pidverify.o
 	gcc ${CCFLAGS} -c ${SRCDIR}/pidtest.c -o ${TEMPDIR}/pidtest.o
 	# gcc ${CCFLAGS} ${TEMPDIR}/pidverify.o ${TEMPDIR}/pidcontrol.o -o${BUILDDIR}/pidverify
 	gcc ${CCFLAGS} ${TEMPDIR}/pidtest.o ${TEMPDIR}/pidcontrol.o -o${BUILDDIR}/pidtest
+
+
 
 

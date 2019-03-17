@@ -11,12 +11,12 @@ This file generates test data for the floating-point pidtest
 """
 
 """Parameters: 
-time_step: sample time#
 filename: output file for writing data
 e_mode: determines how the controller input e is generated
 """
 
 filename = "PIDControlTestDataPython.txt"
+filename_debug = "../build/debug/PIDControlTestData.txt"
 
 # 0.5 and 30 according to given file
 time_step = 0.5
@@ -24,9 +24,9 @@ t0 = 0
 tf = 30
 
 # e_mode = "sinus"
-# e_mode = "step"
-# step_time = 2
-e_mode = "two_added_sines"
+e_mode = "step"
+step_time = 2
+# e_mode = "two_added_sines"
 
 
 """Beginning of program execution"""
@@ -80,6 +80,12 @@ if not (np.array_equal(t, t_pi) and np.array_equal(t, t_pid)):
 t_p = t
 y_p = K_p * e
 
+# write to file
+X = np.stack((t, e, y_p, y_pi[0, :], y_pid[0, :]), axis=1)
+
+np.savetxt(filename, X, "%.8f", delimiter="\t")
+np.savetxt(filename_debug, X, "%.8f", delimiter="\t")
+
 # plot results
 fig = plt.figure(filename)
 ax1 = fig.add_subplot(411)
@@ -110,12 +116,7 @@ ax4.set_ylabel("P controller output")
 ax4.grid()
 ax4.legend()
 
-#plt.show()
-
-# write to file
-X = np.stack((t, e, y_p, y_pi[0, :], y_pid[0, :]), axis=1)
-
-np.savetxt(filename, X, "%.8f", delimiter="\t")
+plt.show()
 
 
 
