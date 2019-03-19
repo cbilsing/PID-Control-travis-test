@@ -84,7 +84,7 @@
 /* PID_INTEGER_PRECISION:
    This definition is only used when the library uses fixpoint arithmetic,
    i.e., if PID_VAL_FORMAT_I8, PID_VAL_FORMAT_I16, PID_VAL_FORMAT_I32, or
-   PID_VAL_FORMAT_I64 is set. It defines the number of DECIMAL PLACES in the integer 
+   PID_VAL_FORMAT_I64 is set. It defines the number of digits in the integer 
    numbers for the controller gains Kr, Kp, Ki, Kd, the control error e,
    the controller output y and the controller limits which are assumed 
    to be after the decimal point in floating point notation. 
@@ -99,8 +99,8 @@
    ==> x = 14321 is a representation of 14321.0
 
    Please note that this holds only for the control difference, the controller
-   output, the limits, and the controller gains Kr, Kp, Ki, and Kd. 
-   * All time parameters (i.e. Tn, Tv, Tf, and TSample) are always treated without
+   output, the limits, and the controller gains Kr, Kp, Ki, and Kd. All
+   time parameters (i.e. Tn, Tv, Tf, and TSample) are always treated without
    having digits after the decimal point. Hence, if you have TSample = 0.025s
    you have to pass it in ms as TSample = 25 and scale your gains appropriately.
 
@@ -108,22 +108,10 @@
    Unit of control error -> Newton
    Unit of controller output -> Volt
    Floating point world: Sample time 0.025s, Ki = 12.5 V/(N s)
-   Fixpoint world: #define PID_INTEGER_PRECISION 4
-   * 
-   Then you have to assume TSample as 25 ms  and Ki as 0.0125 V/(N ms) and 
-   you pass TSample = 25 and Ki = 125. 
-   * 
-   General algorithm: 
-   Given: TSample, Tf, Kd, Ki, Kp
-   Wanted: TSample', Tf', Kd', Ki', Kp'
-   1) Kp' = Kp
-   2) assume TSample' so that TSample' has no decimal places
-   3) Ki' = (Ts / Ts') * Ki
-   4) Kd' = (Ts' / Ts) * Kd
-   5) Tf' = (Ts' / Ts) * Tf  
-   * 
-   Then you mulitpliy all K values with PID_FIXPOINT_FACTOR and pass
-   them. 
+   Fixpoint world: #define PID_INTEGER_PRECISION 3
+
+   Then you have to assume TSample as 25 ms  and Ki as 0.125 V/(N ms) and
+   you pass TSample = 25 and Ki = 125.
 */
 #define PID_INTEGER_PRECISION 4
 
